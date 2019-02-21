@@ -33,7 +33,7 @@ class Player(PhysicalObject):
         speed = abs(self.speed)
         if speed > 100:
             speed = 100
-        return speed
+        return speed if self.speed > 0 else -speed
 
     @property
     def speed(self):
