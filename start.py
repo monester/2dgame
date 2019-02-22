@@ -28,14 +28,15 @@ map = [
     [81, 545], [60, 338], [68, 170], [213, 63], [376, 50], [614, 46], [797, 63], [1019, 136],
     [1049, 299], [997, 438], [848, 536], [722, 552], [580, 603], [426, 626], [286, 632], [81, 545]
 ]
-player = player.Player(x=400, y=300, map=map)
+
+player = player.Player(x=120, y=300, map=map)
+player.rotation = 270
 pyglet.clock.schedule_interval(player.update, 1/120.0)
 game_window.push_handlers(player.key_handler)
 
 @game_window.event
 def on_mouse_press(x, y, button, modifiers):
     map.append([x, y])
-    print(map)
 
 
 @game_window.event
@@ -54,29 +55,20 @@ def on_draw():
         "Rotation   : %.03f (%.03f)" % (-player.current_rotation * 180 / math.pi, player.rotation),
         "Diff angle : %.03f" % (player.diff_angle),
     )
-    # map = [548, 382, 606, 384]
 
     if len(map) > 1:
-        lines_count = len(map)
-        # indexes = [0, 1, 2, 3, 4, 5, 4, 5][:len(map)]
-        # print(indexes)
         mode = pyglet.gl.GL_LINES
-        # mode = pyglet.gl.GL_TRIANGLES
         lines = []
         for index, point in enumerate(map):
             lines += point
             if len(lines) % 4 == 0:
                 lines += point
-        # print(int(len(lines) / 2), mode, ('v2i', lines))
         pyglet.graphics.draw(int(len(lines) / 2), mode, ('v2i', lines))
 
     current_speed.draw()
     current_vector.draw()
     current_rotation.draw()
     diff_angle.draw()
-
-    #
-    # vertex_list.draw(pyglet.gl.GL_LINES)
 
     player.draw()
 

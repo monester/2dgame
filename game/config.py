@@ -1,2 +1,10 @@
 WINDOW_WIDTH = 1200
 WINDOW_HEIGHT = 800
+
+# car settings
+CAR_THRUST = 450.0
+MAX_CAR_SPEED = 1200
+MAX_CAR_ROTATION_SPEED = 400
+
+# pysical object settings
+FRICTION = 0.4

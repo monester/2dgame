@@ -2,6 +2,7 @@ import math
 import pyglet
 from pyglet.window import key
 from .resources import player_image
+from . import config
 from .physicalobject import PhysicalObject
 
 
@@ -10,7 +11,8 @@ class Player(PhysicalObject):
         super().__init__(img=player_image, *args, **kwargs)
         self.map = map
         self.dead = False
-        self.thrust = 450.0
+        self.thrust = config.CAR_THRUST
+        self.max_rotation_speed = config.MAX_CAR_ROTATION_SPEED
         self.key_handler = key.KeyStateHandler()
         # print(player_image.height)
 
@@ -27,28 +29,17 @@ class Player(PhysicalObject):
             force_y = math.sin(angle_radians) * thrust * dt
             self.velocity_x += force_x
             self.velocity_y += force_y
-
         if self.key_handler[key.Q]:
             pyglet.app.event_loop.exit()
 
     @property
     def rotate_speed(self):
         speed = abs(self.speed)
-        if speed > 400:
-            speed = 400
+        if speed > self.max_rotation_speed:
+            speed = self.max_rotation_speed
         return speed if self.speed > 0 else -speed
-
-    def update_position(self, dt):
-        speed = self.speed
-        current_vector = self.current_vector
-        current_rotation = self.current_rotation
-        self.velocity_x = math.cos(current_rotation) * speed
-        self.velocity_y = math.sin(current_rotation) * speed
-
-        super().update_position(dt)
 
     def check_track(self):
         map = self.map
-
         for a, b in list(zip(map[:1] + map[1:], map[1:] + map[:1])):
             pass

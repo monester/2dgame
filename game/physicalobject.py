@@ -5,11 +5,12 @@ from . import config
 
 class PhysicalObject(pyglet.sprite.Sprite):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, max_speed=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.velocity_x = 0.0
         self.velocity_y = 0.0
-        self.friction = 0.4
+        self.max_speed = 400
+        self.friction = config.FRICTION
 
     def check_borders(self):
         if self.x > config.WINDOW_WIDTH:
@@ -27,11 +28,15 @@ class PhysicalObject(pyglet.sprite.Sprite):
             self.y = 0
 
     def update_position(self, dt):
+        speed = self.speed if self.speed < self.max_speed else self.max_speed
+        current_rotation = self.current_rotation
+        self.velocity_x = math.cos(current_rotation) * speed
+        self.velocity_y = math.sin(current_rotation) * speed
         self.x += self.velocity_x * dt
         self.y += self.velocity_y * dt
 
-    def check_friction(self, dt):
-        if abs(self.speed) < 1:
+    def update_friction(self, dt):
+        if abs(self.speed) < 100 * dt:
             self.velocity_x = 0
             self.velocity_y = 0
 
@@ -42,18 +47,20 @@ class PhysicalObject(pyglet.sprite.Sprite):
             self.velocity_y *= 1.0 - self.friction * dt
 
     def update(self, dt):
-        # print(self.velocity_x)
-        # print(self.velocity_y)
         self.update_position(dt)
+        self.update_friction(dt)
         self.check_borders()
-        self.check_friction(dt)
 
     @property
-    def rotate_speed(self):
-        speed = abs(self.speed)
-        if speed > 400:
-            speed = 400
-        return speed if self.speed > 0 else -speed
+    def diff_angle(self):
+        a = self.current_vector
+        b = self.current_rotation
+        a = a * 180 / math.pi
+        b = b * 180 / math.pi
+        r = (b - a) % 360.0
+        if r >= 180.0:
+            r -= 360.0
+        return r
 
     @property
     def speed(self):
@@ -70,14 +77,3 @@ class PhysicalObject(pyglet.sprite.Sprite):
     @property
     def current_rotation(self):
         return -math.radians(self.rotation)
-
-    @property
-    def diff_angle(self):
-        a = self.current_vector
-        b = self.current_rotation
-        a = a * 180 / math.pi
-        b = b * 180 / math.pi
-        r = (b - a) % 360.0
-        if r >= 180.0:
-            r -= 360.0
-        return r
