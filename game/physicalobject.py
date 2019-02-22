@@ -12,6 +12,12 @@ class PhysicalObject(pyglet.sprite.Sprite):
         self.max_speed = 400
         self.friction = config.FRICTION
 
+    @property
+    def points(self):
+        points = list(self._vertex_list.vertices)
+        points = list(zip(*[points[i::2] for i in range(2)]))
+        return points
+
     def check_borders(self):
         if self.x > config.WINDOW_WIDTH:
             self.velocity_x = 0

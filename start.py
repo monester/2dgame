@@ -1,6 +1,6 @@
 import pyglet
 import math
-from game import player, config
+from game import player, config, map as _map
 
 game_window = pyglet.window.Window(width=config.WINDOW_WIDTH, height=config.WINDOW_HEIGHT)
 
@@ -24,19 +24,19 @@ vertex_list = pyglet.graphics.vertex_list(
     ('c3B', (0, 0, 0, 0, 0, 0))
 )
 
-map = [
+map = _map.Map([
     [81, 545], [60, 338], [68, 170], [213, 63], [376, 50], [614, 46], [797, 63], [1019, 136],
     [1049, 299], [997, 438], [848, 536], [722, 552], [580, 603], [426, 626], [286, 632], [81, 545]
-]
+])
 
 player = player.Player(x=120, y=300, map=map)
 player.rotation = 270
 pyglet.clock.schedule_interval(player.update, 1/120.0)
 game_window.push_handlers(player.key_handler)
 
-@game_window.event
-def on_mouse_press(x, y, button, modifiers):
-    map.append([x, y])
+# @game_window.event
+# def on_mouse_press(x, y, button, modifiers):
+#     map.append([x, y])
 
 
 @game_window.event
@@ -56,21 +56,19 @@ def on_draw():
         "Diff angle : %.03f" % (player.diff_angle),
     )
 
-    if len(map) > 1:
-        mode = pyglet.gl.GL_LINES
-        lines = []
-        for index, point in enumerate(map):
-            lines += point
-            if len(lines) % 4 == 0:
-                lines += point
-        pyglet.graphics.draw(int(len(lines) / 2), mode, ('v2i', lines))
 
     current_speed.draw()
     current_vector.draw()
     current_rotation.draw()
     diff_angle.draw()
 
+    map.draw()
     player.draw()
+    points = player.points
+    # print(points)
+
+    _map.Map(points).draw()
+    map.check_colision(player)
 
 
 if __name__ == '__main__':
