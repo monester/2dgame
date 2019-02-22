@@ -1,10 +1,9 @@
 import pyglet
-from pyglet.window import key
-from game import player
-game_window = pyglet.window.Window(width=800, height=600)
+import math
+from game import player, config
 
-player = player.Player(x=400, y=300)
-game_window.push_handlers(player.key_handler)
+game_window = pyglet.window.Window(width=config.WINDOW_WIDTH, height=config.WINDOW_HEIGHT)
+
 
 borders = [
     [90, 500],
@@ -12,53 +11,72 @@ borders = [
 ]
 
 
-pyglet.clock.schedule_interval(player.update, 1/20.0)
 
 
-# @game_window.event
-# def on_mouse_press(x, y, button, modifiers):
-#     print(x, y, button, modifiers)
+current_speed = pyglet.text.Label(x=10, y=config.WINDOW_HEIGHT - 20, font_name='FreeMono')
+current_vector = pyglet.text.Label(x=10, y=config.WINDOW_HEIGHT - 40, font_name='FreeMono')
+current_rotation = pyglet.text.Label(x=10,y=config.WINDOW_HEIGHT - 60, font_name='FreeMono')
+diff_angle = pyglet.text.Label(x=10,y=config.WINDOW_HEIGHT - 80, font_name='FreeMono')
 
-# @game_window.event
-# def on_key_press(symbol, mods):
-#     if symbol == key.Q:
-#         pyglet.app.event_loop.exit()
+vertex_list = pyglet.graphics.vertex_list(
+    2,
+    ('v2i', (10, 15, 30, 35)),
+    ('c3B', (0, 0, 0, 0, 0, 0))
+)
 
-current_speed = pyglet.text.Label(text="Speed: %s" % player.current_vector, x=10, y=585, font_name='FreeMono')
-current_vector = pyglet.text.Label(text="Score: %s" % player.current_vector, x=10, y=565, font_name='FreeMono')
-current_rotation = pyglet.text.Label(text="Score: %s" % player.current_rotation, x=10,y=545, font_name='FreeMono')
-diff_angle = pyglet.text.Label(text="Score: %s" % player.current_rotation, x=10,y=525, font_name='FreeMono')
+map = [
+    [81, 545], [60, 338], [68, 170], [213, 63], [376, 50], [614, 46], [797, 63], [1019, 136],
+    [1049, 299], [997, 438], [848, 536], [722, 552], [580, 603], [426, 626], [286, 632], [81, 545]
+]
+player = player.Player(x=400, y=300, map=map)
+pyglet.clock.schedule_interval(player.update, 1/120.0)
+game_window.push_handlers(player.key_handler)
 
-import math
+@game_window.event
+def on_mouse_press(x, y, button, modifiers):
+    map.append([x, y])
+    print(map)
+
+
 @game_window.event
 def on_draw():
+    # background
     pyglet.graphics.draw_indexed(4, pyglet.gl.GL_TRIANGLES,
                                  [0, 1, 2, 0, 2, 3],
-                                 ('v2i', (0, 0,
-                                          800, 0,
-                                          800, 600,
-                                          0, 600)),
-                                 ('c3B', (86, 176, 0,
-                                          86, 176, 0,
-                                          86, 176, 0,
-                                          86, 176, 0),
-                                 ))
+                                 ('v2i', (0, 0, config.WINDOW_WIDTH, 0, config.WINDOW_WIDTH, config.WINDOW_HEIGHT,
+                                          0, config.WINDOW_HEIGHT)),
+                                 ('c3B', [86, 176, 0] * 4))
+
+    # debug info
     current_speed.text, current_vector.text, current_rotation.text, diff_angle.text = (
         "Speed      : %.03f" % player.speed,
         "Vector     : %.03f" % (player.current_vector * 180 / math.pi),
         "Rotation   : %.03f (%.03f)" % (-player.current_rotation * 180 / math.pi, player.rotation),
         "Diff angle : %.03f" % (player.diff_angle),
     )
+    # map = [548, 382, 606, 384]
+
+    if len(map) > 1:
+        lines_count = len(map)
+        # indexes = [0, 1, 2, 3, 4, 5, 4, 5][:len(map)]
+        # print(indexes)
+        mode = pyglet.gl.GL_LINES
+        # mode = pyglet.gl.GL_TRIANGLES
+        lines = []
+        for index, point in enumerate(map):
+            lines += point
+            if len(lines) % 4 == 0:
+                lines += point
+        # print(int(len(lines) / 2), mode, ('v2i', lines))
+        pyglet.graphics.draw(int(len(lines) / 2), mode, ('v2i', lines))
 
     current_speed.draw()
     current_vector.draw()
     current_rotation.draw()
     diff_angle.draw()
-    pyglet.graphics.draw(2, pyglet.gl.GL_POINTS,
-                         ('v2i', (10, 15, 30, 35)),
-                         ('c3B', (0, 0, 255, 0, 255, 0))
-                         )
-    # pyglet.graphics.draw_indexed()
+
+    #
+    # vertex_list.draw(pyglet.gl.GL_LINES)
 
     player.draw()
 
