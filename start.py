@@ -10,7 +10,7 @@ debug_player = debug_info.Panel(main_batch)
 map = _map.Map([
     [81, 545], [60, 338], [68, 170], [213, 63], [376, 50], [614, 46], [797, 63], [1019, 136],
     [1049, 299], [997, 438], [848, 536], [722, 552], [580, 603], [426, 626], [286, 632], [81, 545]
-])
+], batch=main_batch)
 
 player = player.Player(x=120, y=300, batch=main_batch)
 player.rotation = 270
@@ -35,7 +35,6 @@ def on_draw():
     debug_player.update(player)
 
     main_batch.draw()
-    map.draw()
 
     _map.Map(player.points).draw()
     map.check_colision(player)

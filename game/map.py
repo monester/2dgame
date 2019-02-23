@@ -50,8 +50,14 @@ def get_lines(points):
     return lines
 
 class Map:
-    def __init__(self, points):
+    def __init__(self, points, batch=None):
         self.points = points
+        self.batch = batch
+        if self.batch and len(self.points) > 1:
+            lines = self.lines
+            self.batch.add(
+                int(len(self.lines) / 2), pyglet.gl.GL_LINES, None, ('v2i', lines)
+            )
 
     @property
     def lines(self):
