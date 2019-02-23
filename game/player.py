@@ -7,8 +7,10 @@ from .physicalobject import PhysicalObject
 
 
 class Player(PhysicalObject):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, rotation, *args, **kwargs):
         super().__init__(img=player_image, *args, **kwargs)
+        self.start_position = kwargs['x'], kwargs['y'], rotation
+        self.rotation = rotation
         self.dead = False
         self.thrust = config.CAR_THRUST
         self.max_rotation_speed = config.MAX_CAR_ROTATION_SPEED
@@ -47,3 +49,7 @@ class Player(PhysicalObject):
         if speed > self.max_rotation_speed:
             speed = self.max_rotation_speed
         return speed if self.speed > 0 else -speed
+
+    def restart(self):
+        self.x, self.y, self.rotation = self.start_position
+        self.velocity_x = self.velocity_y = 0

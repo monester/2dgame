@@ -42,14 +42,12 @@ class PhysicalObject(pyglet.sprite.Sprite):
         self.y += self.velocity_y * dt
 
     def update_friction(self, dt):
-        if abs(self.speed) < 2:
+        speed = abs(self.speed)
+        if speed < 2:
             self.velocity_x = 0
             self.velocity_y = 0
-
-        if self.velocity_x > 0:
+        elif speed > 0:
             self.velocity_x *= 1.0 - self.friction * dt
-
-        if self.velocity_y > 0:
             self.velocity_y *= 1.0 - self.friction * dt
 
     def update(self, dt):

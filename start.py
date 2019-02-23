@@ -12,8 +12,8 @@ map = _map.Map([
     [1049, 299], [997, 438], [848, 536], [722, 552], [580, 603], [426, 626], [286, 632], [81, 545]
 ], batch=main_batch)
 
-player = player.Player(x=120, y=300, batch=main_batch)
-player.rotation = 270
+player = player.Player(x=120, y=300, rotation=270, batch=main_batch)
+
 pyglet.clock.schedule_interval(player.update, 1/120.0)
 game_window.push_handlers(player.key_handler)
 
@@ -36,8 +36,10 @@ def on_draw():
 
     main_batch.draw()
 
-    _map.Map(player.points).draw()
-    map.check_colision(player)
+    # _map.Map(player.points).draw()
+    _, _, collide = map.check_colision(player)
+    if collide:
+        player.restart()
 
 
 if __name__ == '__main__':

@@ -86,3 +86,5 @@ class Map:
                     mode = pyglet.gl.GL_LINES
                     pyglet.graphics.draw(2, mode, ('v2i', mline[0] + mline[1]), ('c3B', [255, 0, 0, 255, 0, 0]))
                     pyglet.graphics.draw(2, mode, ('v2i', oline[0] + oline[1]), ('c3B', [255, 0, 0, 255, 0, 0]))
+                    return x, y, intersect
+        return float('Inf'), float('Inf'), False
