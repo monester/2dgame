@@ -9,6 +9,7 @@ from .physicalobject import PhysicalObject
 class Player(PhysicalObject):
     def __init__(self, rotation, *args, **kwargs):
         super().__init__(img=player_image, *args, **kwargs)
+        self.scale = 0.5
         self.start_position = kwargs['x'], kwargs['y'], rotation
         self.rotation = rotation
         self.dead = False

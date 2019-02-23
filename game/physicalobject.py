@@ -38,6 +38,7 @@ class PhysicalObject(pyglet.sprite.Sprite):
         current_rotation = self.current_rotation
         self.velocity_x = math.cos(current_rotation) * speed
         self.velocity_y = math.sin(current_rotation) * speed
+
         self.x += self.velocity_x * dt
         self.y += self.velocity_y * dt
 
