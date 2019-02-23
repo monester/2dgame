@@ -1,35 +1,18 @@
 import pyglet
-import math
-from game import player, config, map as _map
+from game import player, config, map as _map, debug_info
 
 game_window = pyglet.window.Window(width=config.WINDOW_WIDTH, height=config.WINDOW_HEIGHT)
 
 
-borders = [
-    [90, 500],
-    [750, 500],
-]
-
-
-
-
-current_speed = pyglet.text.Label(x=10, y=config.WINDOW_HEIGHT - 20, font_name='FreeMono')
-current_vector = pyglet.text.Label(x=10, y=config.WINDOW_HEIGHT - 40, font_name='FreeMono')
-current_rotation = pyglet.text.Label(x=10,y=config.WINDOW_HEIGHT - 60, font_name='FreeMono')
-diff_angle = pyglet.text.Label(x=10,y=config.WINDOW_HEIGHT - 80, font_name='FreeMono')
-
-vertex_list = pyglet.graphics.vertex_list(
-    2,
-    ('v2i', (10, 15, 30, 35)),
-    ('c3B', (0, 0, 0, 0, 0, 0))
-)
+main_batch = pyglet.graphics.Batch()
+debug_player = debug_info.Panel(main_batch)
 
 map = _map.Map([
     [81, 545], [60, 338], [68, 170], [213, 63], [376, 50], [614, 46], [797, 63], [1019, 136],
     [1049, 299], [997, 438], [848, 536], [722, 552], [580, 603], [426, 626], [286, 632], [81, 545]
 ])
 
-player = player.Player(x=120, y=300, map=map)
+player = player.Player(x=120, y=300, batch=main_batch)
 player.rotation = 270
 pyglet.clock.schedule_interval(player.update, 1/120.0)
 game_window.push_handlers(player.key_handler)
@@ -49,25 +32,12 @@ def on_draw():
                                  ('c3B', [86, 176, 0] * 4))
 
     # debug info
-    current_speed.text, current_vector.text, current_rotation.text, diff_angle.text = (
-        "Speed      : %.03f" % player.speed,
-        "Vector     : %.03f" % (player.current_vector * 180 / math.pi),
-        "Rotation   : %.03f (%.03f)" % (-player.current_rotation * 180 / math.pi, player.rotation),
-        "Diff angle : %.03f" % (player.diff_angle),
-    )
+    debug_player.update(player)
 
-
-    current_speed.draw()
-    current_vector.draw()
-    current_rotation.draw()
-    diff_angle.draw()
-
+    main_batch.draw()
     map.draw()
-    player.draw()
-    points = player.points
-    # print(points)
 
-    _map.Map(points).draw()
+    _map.Map(player.points).draw()
     map.check_colision(player)
 
 
