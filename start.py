@@ -1,4 +1,6 @@
 import pyglet
+from pyglet.window import key
+
 from game import Player, config, Map, debug_info, Gate
 
 
@@ -7,17 +9,31 @@ game_window = pyglet.window.Window(width=config.WINDOW_WIDTH, height=config.WIND
 
 main_batch = pyglet.graphics.Batch()
 debug_player = debug_info.Panel(main_batch)
+key_handler = key.KeyStateHandler()
+game_window.push_handlers(key_handler)
 
 
 class Game:
-    def __init__(self, maps):
+    def __init__(self, maps, key_handler):
         self.score = 0
         self.player = None
         self.start_position = dict(x=190, y=550, rotation=330)
         maps = maps or []
+        self.key_handler = key_handler
         self.maps = [Map(map) for map in maps]
         if len(maps) == 2:
             self.gates = Gate(maps[0], maps[1])
+
+    def read_key(self):
+        if self.key_handler[key.Q]:
+            pyglet.app.event_loop.exit()
+
+        return dict(
+            left=self.key_handler[key.LEFT],
+            right=self.key_handler[key.RIGHT],
+            up=self.key_handler[key.UP],
+            down=self.key_handler[key.DOWN],
+        )
 
     def loop(self, dt):
         if self.player is None:
@@ -26,13 +42,12 @@ class Game:
         if any(map.check_colision(self.player)[2] for map in self.maps):
             self.restart()
 
-        self.player.update(dt)
+        self.player.update(dt, **self.read_key())
         if self.gates.check_intersect(self.player):
             self.score += 10
 
     def start(self):
         self.player = Player(batch=main_batch, **self.start_position)
-        game_window.push_handlers(self.player.key_handler)
         self.score = 0
         self.gates.last_checked = 0
 
@@ -50,7 +65,7 @@ map2_points = [
     [1074, 322], [963, 177], [773, 109], [534, 95], [276, 115], [148, 190], [151, 281]
 ]
 
-game = Game([map1_points, map2_points])
+game = Game([map1_points, map2_points], key_handler)
 game.start()
 
 pyglet.clock.schedule_interval(game.loop, 1/120.0)

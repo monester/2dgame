@@ -1,6 +1,4 @@
 import math
-import pyglet
-from pyglet.window import key
 from .resources import player_image
 from . import config
 from .physicalobject import PhysicalObject
@@ -15,16 +13,15 @@ class Player(PhysicalObject):
         self.dead = False
         self.thrust = config.CAR_THRUST
         self.max_rotation_speed = config.MAX_CAR_ROTATION_SPEED
-        self.key_handler = key.KeyStateHandler()
 
-    def update(self, dt):
+    def update(self, dt, left, right, up, down):
         super().update(dt)
-        if self.key_handler[key.LEFT]:
+        if left:
             self.rotation -= self.rotate_speed * dt
-        if self.key_handler[key.RIGHT]:
+        if right:
             self.rotation += self.rotate_speed * dt
-        if self.key_handler[key.UP] or self.key_handler[key.DOWN]:
-            if self.key_handler[key.UP]:
+        if up or down:
+            if up:
                 # move forward
                 if self.speed >= 0:
                     thrust = self.thrust
@@ -41,8 +38,6 @@ class Player(PhysicalObject):
             force_y = math.sin(angle_radians) * thrust * dt
             self.velocity_x += force_x
             self.velocity_y += force_y
-        if self.key_handler[key.Q]:
-            pyglet.app.event_loop.exit()
 
     @property
     def rotate_speed(self):
