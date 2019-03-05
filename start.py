@@ -8,6 +8,39 @@ game_window = pyglet.window.Window(width=config.WINDOW_WIDTH, height=config.WIND
 main_batch = pyglet.graphics.Batch()
 debug_player = debug_info.Panel(main_batch)
 
+
+class Game:
+    def __init__(self, maps):
+        self.score = 0
+        self.player = None
+        self.start_position = dict(x=190, y=550, rotation=330)
+        maps = maps or []
+        self.maps = [Map(map) for map in maps]
+        if len(maps) == 2:
+            self.gates = Gate(maps[0], maps[1])
+
+    def loop(self, dt):
+        if self.player is None:
+            return
+
+        if any(map.check_colision(self.player)[2] for map in self.maps):
+            self.restart()
+
+        self.player.update(dt)
+        if self.gates.check_intersect(self.player):
+            self.score += 10
+
+    def start(self):
+        self.player = Player(batch=main_batch, **self.start_position)
+        game_window.push_handlers(self.player.key_handler)
+        self.score = 0
+        self.gates.last_checked = 0
+
+    def restart(self):
+        del self.player
+        self.start()
+
+
 map1_points = [
     [60, 545], [60, 338], [68, 170], [213, 63], [376, 50], [614, 46], [797, 63], [1019, 136],
     [1149, 299], [1150, 650], [1050, 756], [722, 756], [580, 603], [426, 626], [286, 632], [60, 545]
@@ -17,28 +50,20 @@ map2_points = [
     [1074, 322], [963, 177], [773, 109], [534, 95], [276, 115], [148, 190], [151, 281]
 ]
 
-game_score = 0
+game = Game([map1_points, map2_points])
+game.start()
 
-gate = Gate(map1_points, map2_points)
+pyglet.clock.schedule_interval(game.loop, 1/120.0)
 
-map1 = Map(map1_points, batch=main_batch)
-map2 = Map(map2_points)
-
-player = Player(x=100, y=300, rotation=270, batch=main_batch)
-
-pyglet.clock.schedule_interval(player.update, 1/120.0)
-game_window.push_handlers(player.key_handler)
-
-new_points = []
-@game_window.event
-def on_mouse_press(x, y, button, modifiers):
-    new_points.append([x, y])
-    print(new_points)
+# new_points = []
+# @game_window.event
+# def on_mouse_press(x, y, button, modifiers):
+#     new_points.append([x, y])
+#     print(new_points)
 
 
 @game_window.event
 def on_draw():
-    global game_score
     # background
     pyglet.graphics.draw_indexed(4, pyglet.gl.GL_TRIANGLES,
                                  [0, 1, 2, 0, 2, 3],
@@ -47,26 +72,22 @@ def on_draw():
                                  ('c3B', [86, 176, 0] * 4))
 
     # debug info
-    debug_player.update(player)
+    debug_player.update(game.player)
 
     main_batch.draw()
 
-    # Map(player.points).draw()
-    pyglet.text.Label(text=f'Score: {game_score}', x=400, y=config.WINDOW_HEIGHT - 20, font_name='FreeMono').draw()
-    Map(new_points).draw()
-    map2.draw()
-    _, _, collide1 = map1.check_colision(player)
-    _, _, collide2 = map2.check_colision(player)
-    if collide1 or collide2:
-        # gameover
-        game_score = 0
-        gate.last_checked = 0
-        player.restart()
+    # draw new line
+    # Map(new_points).draw()
+
+    # draw box
+    # Map(game.player.points).draw()
+
+    pyglet.text.Label(text=f'Score: {game.score}', x=400, y=config.WINDOW_HEIGHT - 20, font_name='FreeMono').draw()
+    for map in game.maps:
+        map.draw()
 
     # draw gates
-    gate.draw()
-    if gate.check_intersect(player):
-        game_score += 10
+    game.gates.draw()
 
 
 if __name__ == '__main__':

@@ -50,7 +50,3 @@ class Player(PhysicalObject):
         if speed > self.max_rotation_speed:
             speed = self.max_rotation_speed
         return speed if self.speed > 0 else -speed
-
-    def restart(self):
-        self.x, self.y, self.rotation = self.start_position
-        self.velocity_x = self.velocity_y = 0
