@@ -12,6 +12,8 @@ debug_player = debug_info.Panel(main_batch)
 key_handler = key.KeyStateHandler()
 game_window.push_handlers(key_handler)
 
+from ml import Population
+
 
 class Game:
     def __init__(self, maps, key_handler):
@@ -23,6 +25,11 @@ class Game:
         self.maps = [Map(map) for map in maps]
         if len(maps) == 2:
             self.gates = Gate(maps[0], maps[1])
+
+        # neat
+        self.population = Population(
+            brain=dict(target=900), player=dict(rotation=0, x=10, y=20), count=100,
+        )
 
     def read_key(self):
         if self.key_handler[key.Q]:
@@ -46,6 +53,8 @@ class Game:
         if self.gates.check_intersect(self.player):
             self.score += 10
 
+        self.population.update(dt)
+
     def start(self):
         self.player = Player(batch=main_batch, **self.start_position)
         self.score = 0
@@ -68,7 +77,7 @@ map2_points = [
 game = Game([map1_points, map2_points], key_handler)
 game.start()
 
-pyglet.clock.schedule_interval(game.loop, 1/120.0)
+pyglet.clock.schedule_interval(game.loop, 1/60.0)
 
 # new_points = []
 # @game_window.event
@@ -100,6 +109,8 @@ def on_draw():
     pyglet.text.Label(text=f'Score: {game.score}', x=400, y=config.WINDOW_HEIGHT - 20, font_name='FreeMono').draw()
     for map in game.maps:
         map.draw()
+
+    [p.player.draw() for p in game.population.population]
 
     # draw gates
     game.gates.draw()
