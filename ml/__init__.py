@@ -76,13 +76,37 @@ from game.player import Player
 # p = Player(0, x=1, y=1)
 
 
+class Neuron:
+    def __init__(self, total_args, weights=None, bias=None):
+        self.weights = weights or list(map(lambda _: np.random.randn(), range(total_args)))
+        self.total_args = total_args
+        self.bias = bias or np.random.randn()
+
+    def __call__(self, *args):
+        sum = np.sum([
+            w * value for w, value in zip(self.weights, args)
+        ]) + self.bias
+
+        return sigmoid(sum)
+
+    def breed(self, pair, mutate=False):
+        weights = [
+            (n1 + n2) / 2
+            for n1, n2 in zip(self.weights, pair.weights)
+        ]
+        if mutate:
+            mutate_weight = np.random.randint(self.total_args)
+
+            # mutate weight +- 10%
+            weights[mutate_weight] += weights[mutate_weight] * np.random.rand() * 0.1
+
+        bias = (self.bias + pair.bias) / 2
+        return Neuron(self.total_args, weights, bias)
+
+
 class Brain:
-    def __init__(self, target, player, params=None):
-        self.params = params or dict(
-            w1=np.random.randn(),
-            w2=np.random.randn(),
-            b=np.random.randn(),
-        )
+    def __init__(self, target, player, neurons=None):
+        self.neurons = neurons or [Neuron(2), Neuron(2)]
         self.player = player
         self.target = target
         self.ticks = 0
@@ -90,9 +114,10 @@ class Brain:
     def __call__(self):
         dist = (self.target - self.player.x) / 1200  # max width
         speed = self.player.speed / 450      # max speed
+        neuron_up = self.neurons[0](dist, speed)
+        neuron_down = self.neurons[1](dist, speed)
 
-        r = func(dist=dist, speed=speed, params=self.params)
-        resp = dict(up=r > 0.52, down=r<0.48)
+        resp = dict(up=neuron_up > 0.5, down=neuron_down > 0.5)
         # print(resp)
         return resp
 
@@ -106,6 +131,17 @@ class Brain:
         keys = self()
         self.player.update(dt, **keys)
 
+    def breed(self, pair, count=10):
+        new_species = []
+        for _ in range(count):
+            mutate_neuron = np.random.randint(3)
+            new_neurons = [
+                neuron.breed(pair.neurons[i], mutate=mutate_neuron == i)
+                for i, neuron in enumerate(self.neurons)
+            ]
+            new_species.append(new_neurons)
+        return new_species
+
     @property
     def fitness(self):
         if self.player.x in [1200, 0]:
@@ -115,9 +151,9 @@ class Brain:
         return abs(self.target - self.player.x) + abs(self.player.speed * 2)
 
     def __repr__(self):
-        brain = f"fitness={self.fitness:.2f} w1={self.w1:.2f} w2={self.w2:.2f} b={self.b:.2f}"
+        brain = f"fitness={self.fitness:.2f}" # ' w1={self.w1:.2f} w2={self.w2:.2f} b={self.b:.2f}"
         player = f"x: {self.player.x} speed: {self.player.speed}"
-        return f"{brain:40s} {player:40s}"
+        return f"{brain:20s} {player:40s}"
 
 
 class Population:
@@ -142,24 +178,21 @@ class Population:
 
         if len(self.alive) == 0:
             self.population.sort(key=lambda x: x.fitness)
-            new_population = []
-            print('-'*80, 'Generation: %s' % self.generation)
             self.generation += 1
-            for p in self.population[0:10]:
-                print(repr(p))
-                for _ in range(10):
-                    params = {}
-                    mutate = np.random.randint(3)
-                    for i, (k, v) in enumerate(p.params.items()):
-                        if i == mutate:
-                            if v != 0:
-                                params[k] = v + v * np.random.randn() / 10
-                            else:
-                                params[k] = np.random.randn() / 10
-                        else:
-                            params[k] = v
+            print('-'*80, 'Generation: %s' % self.generation)
 
-                    new_population.append(Brain(target=self.target, player=self.player(), params=params))
+            new_population = []
+            for p in self.population[:3]:
+                print('COPY  | %50r |' % p)
+                new_population.append(Brain(target=self.target, player=self.player(), neurons=p.neurons))
+
+            for s1, s2 in zip(self.population[:7], self.population[3:10]):
+                print('MERGE | %50r | %50r |' % (s1, s2))
+
+                new_population.extend(
+                    Brain(target=self.target, player=self.player(), neurons=neurons)
+                    for neurons in s1.breed(s2)
+                )
             self.population = new_population
             self.alive = list(self.population)
 
