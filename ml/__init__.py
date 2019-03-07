@@ -110,7 +110,9 @@ class Brain:
     def fitness(self):
         if self.player.x in [1200, 0]:
             return float('inf')
-        return abs(self.target - self.player.x) + self.player.speed ** 2
+        # if self.player.dead:
+        #     return float('inf')
+        return abs(self.target - self.player.x) + abs(self.player.speed * 2)
 
     def __repr__(self):
         brain = f"fitness={self.fitness:.2f} w1={self.w1:.2f} w2={self.w2:.2f} b={self.b:.2f}"
@@ -119,16 +121,21 @@ class Brain:
 
 
 class Population:
-    def __init__(self, count, brain, player):
-        self.brain = brain
+    def __init__(self, count, target, player, maps):
+        self.target = target
         self.player = player
-        population = [Brain(**brain, player=Player(**player)) for _ in range(count)]
+        self.maps = maps
+        population = [Brain(target=self.target, player=player()) for _ in range(count)]
         self.alive = list(population)
         self.population = population
+        self.generation = 0
 
     def update(self, dt):
         for i in self.alive[:]:
             i.update(dt)
+
+            # if any(map.check_colision(i.player)[2] for map in self.maps):
+            #     i.player.dead = True
 
             if i.player.dead:
                 self.alive.remove(i)
@@ -136,7 +143,10 @@ class Population:
         if len(self.alive) == 0:
             self.population.sort(key=lambda x: x.fitness)
             new_population = []
+            print('-'*80, 'Generation: %s' % self.generation)
+            self.generation += 1
             for p in self.population[0:10]:
+                print(repr(p))
                 for _ in range(10):
                     params = {}
                     mutate = np.random.randint(3)
@@ -149,7 +159,7 @@ class Population:
                         else:
                             params[k] = v
 
-                    new_population.append(Brain(**self.brain, player=Player(**self.player), params=params))
+                    new_population.append(Brain(target=self.target, player=self.player(), params=params))
             self.population = new_population
             self.alive = list(self.population)
 

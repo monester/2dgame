@@ -14,6 +14,13 @@ def get_intersect(a1, a2, b1, b2):
     b1: [x, y] a point on the second line
     b2: [x, y] another point on the second line
     """
+    # left_x = max(a1[0], a2[0]) < min(b1[0], b2[0])
+    # right_x = max(b1[0], b2[0]) < min(a1[0], a2[0])
+    # left_y = max(a1[1], a2[1]) < min(b1[1], b2[1])
+    # right_y = max(b1[1], b2[1]) < min(a1[1], a2[1])
+    # if left_x and right_x and left_y and right_y:
+    #     return float('inf'), float('inf'), False
+
     s = np.vstack([a1,a2,b1,b2])        # s for stacked
     h = np.hstack((s, np.ones((4, 1)))) # h for homogeneous
     l1 = np.cross(h[0], h[1])           # get first line

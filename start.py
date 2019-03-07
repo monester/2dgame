@@ -18,6 +18,7 @@ from ml import Population
 class Game:
     def __init__(self, maps, key_handler):
         self.score = 0
+        self.target = 300
         self.player = None
         self.start_position = dict(x=190, y=550, rotation=330)
         maps = maps or []
@@ -28,7 +29,10 @@ class Game:
 
         # neat
         self.population = Population(
-            brain=dict(target=900), player=dict(rotation=0, x=10, y=20), count=100,
+            target=self.target,
+            player=lambda: Player(rotation=0, x=20, y=20),
+            maps=self.maps,
+            count=200,
         )
 
     def read_key(self):
@@ -79,11 +83,13 @@ game.start()
 
 pyglet.clock.schedule_interval(game.loop, 1/60.0)
 
-# new_points = []
-# @game_window.event
-# def on_mouse_press(x, y, button, modifiers):
-#     new_points.append([x, y])
-#     print(new_points)
+new_points = []
+@game_window.event
+def on_mouse_press(x, y, button, modifiers):
+    # new_points.append([x, y])
+    # print(new_points)
+    print("NEW TARGET: %s" % x)
+    game.population.target = x
 
 
 @game_window.event
