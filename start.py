@@ -18,9 +18,9 @@ from ml import Population
 class Game:
     def __init__(self, maps, key_handler):
         self.score = 0
-        self.target = 300
+        self.target = type('', (), dict(x=600, y=20))
         self.player = None
-        self.start_position = dict(x=190, y=550, rotation=330)
+        self.start_position = dict(x=190, y=550, rotation=-30)
         maps = maps or []
         self.key_handler = key_handler
         self.maps = [Map(map) for map in maps]
@@ -32,7 +32,7 @@ class Game:
             target=self.target,
             player=lambda: Player(rotation=0, x=20, y=20),
             maps=self.maps,
-            count=200,
+            count=1000,
         )
 
     def read_key(self):
@@ -50,8 +50,8 @@ class Game:
         if self.player is None:
             return
 
-        if any(map.check_colision(self.player)[2] for map in self.maps):
-            self.restart()
+        # if any(map.check_colision(self.player)[2] for map in self.maps):
+        #     self.restart()
 
         self.player.update(dt, **self.read_key())
         if self.gates.check_intersect(self.player):
@@ -89,7 +89,7 @@ def on_mouse_press(x, y, button, modifiers):
     # new_points.append([x, y])
     # print(new_points)
     print("NEW TARGET: %s" % x)
-    game.population.target = x
+    game.population.target = type('', (), dict(x=x, y=y))
 
 
 @game_window.event
@@ -116,7 +116,7 @@ def on_draw():
     for map in game.maps:
         map.draw()
 
-    [p.player.draw() for p in game.population.population]
+    [p.player.draw() for p in game.population.population[0:100]]
 
     # draw gates
     game.gates.draw()

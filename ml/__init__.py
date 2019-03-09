@@ -103,21 +103,26 @@ class Neuron:
         bias = (self.bias + pair.bias) / 2
         return Neuron(self.total_args, weights, bias)
 
-
+import math
 class Brain:
     def __init__(self, target, player, neurons=None):
-        self.neurons = neurons or [Neuron(2), Neuron(2)]
+        self.neurons = neurons or [Neuron(3), Neuron(3), Neuron(3), Neuron(3)]
         self.player = player
         self.target = target
         self.ticks = 0
 
     def __call__(self):
-        dist = (self.target - self.player.x) / 1200  # max width
-        speed = self.player.speed / 450      # max speed
-        neuron_up = self.neurons[0](dist, speed)
-        neuron_down = self.neurons[1](dist, speed)
+        dist = (self.target.x - self.player.x) / 1200  # max width
+        car_angle = math.atan2(self.player.velocity_y, self.player.velocity_x)
+        target_angle = math.atan2(self.target.y - self.player.y, self.target.x - self.player.x)
+        # print(car_angle - target_angle, car_angle, target_angle)
 
-        resp = dict(up=neuron_up > 0.5, down=neuron_down > 0.5)
+        speed = self.player.speed / 450      # max speed
+        actions = {}
+        for index, action in enumerate(['up', 'down', 'left', 'right']):
+            actions[action] = self.neurons[index](dist, speed, car_angle - target_angle) > 0.5
+
+        resp = dict(**actions)
         # print(resp)
         return resp
 
@@ -134,7 +139,7 @@ class Brain:
     def breed(self, pair, count=10):
         new_species = []
         for _ in range(count):
-            mutate_neuron = np.random.randint(3)
+            mutate_neuron = np.random.randint(len(self.neurons))
             new_neurons = [
                 neuron.breed(pair.neurons[i], mutate=mutate_neuron == i)
                 for i, neuron in enumerate(self.neurons)
@@ -146,13 +151,15 @@ class Brain:
     def fitness(self):
         if self.player.x in [1200, 0]:
             return float('inf')
+        if self.player.y in [0, 800]:
+            return float('inf')
         # if self.player.dead:
         #     return float('inf')
-        return abs(self.target - self.player.x) + abs(self.player.speed * 2)
+        return abs(self.target.x - self.player.x) + abs(self.player.speed * 2)
 
     def __repr__(self):
         brain = f"fitness={self.fitness:.2f}" # ' w1={self.w1:.2f} w2={self.w2:.2f} b={self.b:.2f}"
-        player = f"x: {self.player.x} speed: {self.player.speed}"
+        player = f"x: {self.player.x} y: {self.player.y} speed: {self.player.speed}"
         return f"{brain:20s} {player:40s}"
 
 
@@ -165,6 +172,7 @@ class Population:
         self.alive = list(population)
         self.population = population
         self.generation = 0
+        self.count = count
 
     def update(self, dt):
         for i in self.alive[:]:
@@ -186,12 +194,12 @@ class Population:
                 print('COPY  | %50r |' % p)
                 new_population.append(Brain(target=self.target, player=self.player(), neurons=p.neurons))
 
-            for s1, s2 in zip(self.population[:7], self.population[3:10]):
+            for s1, s2 in zip(self.population[:17], self.population[3:20]):
                 print('MERGE | %50r | %50r |' % (s1, s2))
 
                 new_population.extend(
                     Brain(target=self.target, player=self.player(), neurons=neurons)
-                    for neurons in s1.breed(s2)
+                    for neurons in s1.breed(s2, count=int(self.count / 17))
                 )
             self.population = new_population
             self.alive = list(self.population)

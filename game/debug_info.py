@@ -11,9 +11,14 @@ class Panel:
         self.diff_angle = pyglet.text.Label(x=10, y=config.WINDOW_HEIGHT - 80, font_name='FreeMono', batch=batch)
 
     def update(self, player):
+        current_rotation = (player.current_rotation + math.pi) % (math.pi*2) - math.pi
+
         self.current_speed.text, self.current_vector.text, self.current_rotation.text, self.diff_angle.text = (
             "Speed      : %.03f" % player.speed,
             "Vector     : %.03f" % (player.current_vector * 180 / math.pi),
-            "Rotation   : %.03f (%.03f)" % (-player.current_rotation * 180 / math.pi, player.rotation),
+            "Rotation   : %.03f (%.03f)" % (
+                current_rotation,
+                player.rotation,
+            ),
             "Diff angle : %.03f" % (player.diff_angle),
         )
