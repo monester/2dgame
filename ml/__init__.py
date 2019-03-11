@@ -1,21 +1,22 @@
+import math
 import numpy as np
 
 
 def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
+    return 1 / (1 + math.exp(-x))
 
 
-def func(dist, speed, params):
-    # w1 - distance to wall
-    # w2 - speed
-    # b - bias
-    # ----
-    # return 0 - accelerate, 1 - brake
-    w1 = params['w1']
-    w2 = params['w2']
-    b = params['b']
-
-    return sigmoid(dist * w1 + speed * w2 + b)
+# def func(dist, speed, params):
+#     # w1 - distance to wall
+#     # w2 - speed
+#     # b - bias
+#     # ----
+#     # return 0 - accelerate, 1 - brake
+#     w1 = params['w1']
+#     w2 = params['w2']
+#     b = params['b']
+#
+#     return sigmoid(dist * w1 + speed * w2 + b)
 
 
 # data = [
@@ -103,13 +104,12 @@ class Neuron:
         bias = (self.bias + pair.bias) / 2
         return Neuron(self.total_args, weights, bias)
 
-import math
+
 class Brain:
     def __init__(self, target, player, neurons=None):
         self.neurons = neurons or [Neuron(3), Neuron(3), Neuron(3), Neuron(3)]
         self.player = player
         self.target = target
-        self.ticks = 0
 
     def __call__(self):
         dist = (self.target.x - self.player.x) / 1200  # max width
@@ -120,19 +120,15 @@ class Brain:
         speed = self.player.speed / 450      # max speed
         actions = {}
         for index, action in enumerate(['up', 'down', 'left', 'right']):
-            actions[action] = self.neurons[index](dist, speed, car_angle - target_angle) > 0.5
+            actions[action] = self.neurons[index](dist, speed, car_angle - target_angle) > 0.7
 
         resp = dict(**actions)
-        # print(resp)
         return resp
 
     def __getattr__(self, item):
         return self.params[item]
 
     def update(self, dt):
-        self.ticks += 1
-        if self.ticks == 100:
-            self.player.dead = True
         keys = self()
         self.player.update(dt, **keys)
 
@@ -149,13 +145,10 @@ class Brain:
 
     @property
     def fitness(self):
-        if self.player.x in [1200, 0]:
+        if self.player.dead:
             return float('inf')
-        if self.player.y in [0, 800]:
-            return float('inf')
-        # if self.player.dead:
-        #     return float('inf')
-        return abs(self.target.x - self.player.x) + abs(self.player.speed * 2)
+        distance = math.sqrt((self.target.x - self.player.x) ** 2 + (self.target.y - self.player.y) ** 2)
+        return distance + abs(self.player.speed * 2)
 
     def __repr__(self):
         brain = f"fitness={self.fitness:.2f}" # ' w1={self.w1:.2f} w2={self.w2:.2f} b={self.b:.2f}"
@@ -168,13 +161,23 @@ class Population:
         self.target = target
         self.player = player
         self.maps = maps
-        population = [Brain(target=self.target, player=player()) for _ in range(count)]
-        self.alive = list(population)
-        self.population = population
+        self.alive = []
+        self.population = [Brain(target=self.target, player=player()) for _ in range(count)]
         self.generation = 0
         self.count = count
+        self.tick = 0
+
+    @property
+    def population(self):
+        return self._population
+
+    @population.setter
+    def population(self, value):
+        self._population = value
+        self.alive = list(value)
 
     def update(self, dt):
+        self.tick += 1
         for i in self.alive[:]:
             i.update(dt)
 
@@ -184,10 +187,10 @@ class Population:
             if i.player.dead:
                 self.alive.remove(i)
 
-        if len(self.alive) == 0:
+        if len(self.alive) == 0 or self.tick % 100 == 0:
             self.population.sort(key=lambda x: x.fitness)
             self.generation += 1
-            print('-'*80, 'Generation: %s' % self.generation)
+            print('-'*80, f'Generation: {self.generation}: Survived: {len(self.alive)}')
 
             new_population = []
             for p in self.population[:3]:
@@ -202,10 +205,9 @@ class Population:
                     for neurons in s1.breed(s2, count=int(self.count / 17))
                 )
             self.population = new_population
-            self.alive = list(self.population)
 
-
-
+    def __repr__(self):
+        return f"Alive: {len(self.alive)} Gen: {self.generation} Tick: {self.tick}"
 
 # population = [
 #     Brain(target=300, player=Player(0, x=1, y=1))

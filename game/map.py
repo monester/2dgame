@@ -54,6 +54,7 @@ def get_lines(points):
     #         lines += point
     lines = list(zip(*[points[i::2] for i in range(2)]))
     lines += list(zip(*[points[i + 1::2] + [points[0]] for i in range(2)]))
+
     return lines
 
 class Map:

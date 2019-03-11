@@ -20,6 +20,7 @@ class Game:
         self.score = 0
         self.target = type('', (), dict(x=600, y=20))
         self.player = None
+        self.draw = False
         self.start_position = dict(x=190, y=550, rotation=-30)
         maps = maps or []
         self.key_handler = key_handler
@@ -38,6 +39,8 @@ class Game:
     def read_key(self):
         if self.key_handler[key.Q]:
             pyglet.app.event_loop.exit()
+        if self.key_handler[key.D]:
+            self.draw = not self.draw
 
         return dict(
             left=self.key_handler[key.LEFT],
@@ -92,6 +95,14 @@ def on_mouse_press(x, y, button, modifiers):
     game.population.target = type('', (), dict(x=x, y=y))
 
 
+mouse = type('Mouse', (), {'x': 0, 'y': 0})()
+
+@game_window.event
+def on_mouse_motion(x, y, dx, dy):
+    mouse.x, mouse.y = x, y
+    # print x, y, dx, y, dx, dy, x, dy
+
+
 @game_window.event
 def on_draw():
     # background
@@ -102,7 +113,14 @@ def on_draw():
                                  ('c3B', [86, 176, 0] * 4))
 
     # debug info
-    debug_player.update(game.player)
+    debug_player.update(game.player, game.population)
+    print(mouse.x, mouse.y)
+    pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2f', [
+        mouse.x - 20, mouse.y - 20,
+        mouse.x + 20, mouse.y - 20,
+        mouse.x + 20, mouse.y + 20,
+        mouse.x - 20, mouse.y + 20,
+    ]))
 
     main_batch.draw()
 

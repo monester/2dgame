@@ -41,7 +41,8 @@ class Player(PhysicalObject):
             self.velocity_x += force_x
             self.velocity_y += force_y
 
-        if self.x == 0 or self.x == config.WINDOW_WIDTH:
+        if self.x == 0 or self.x == config.WINDOW_WIDTH or self.y == 0 or self.y == config.WINDOW_HEIGHT:
+            # print("DEAD - collide with wall")
             self.dead = True
 
     @property

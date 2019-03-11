@@ -5,15 +5,22 @@ from . import config
 
 class Panel:
     def __init__(self, batch):
-        self.current_speed = pyglet.text.Label(x=10, y=config.WINDOW_HEIGHT - 20, font_name='FreeMono', batch=batch)
-        self.current_vector = pyglet.text.Label(x=10, y=config.WINDOW_HEIGHT - 40, font_name='FreeMono', batch=batch)
-        self.current_rotation = pyglet.text.Label(x=10, y=config.WINDOW_HEIGHT - 60, font_name='FreeMono', batch=batch)
-        self.diff_angle = pyglet.text.Label(x=10, y=config.WINDOW_HEIGHT - 80, font_name='FreeMono', batch=batch)
+        self.batch = batch
+        self.labels = []
 
-    def update(self, player):
+    def text(self, *items):
+        if len(self.labels) != len(items):
+            for i in range(len(self.labels), len(items)):
+                x = 10
+                y = config.WINDOW_HEIGHT - (20 * (i + 1))
+                self.labels.append(pyglet.text.Label(x=x, y=y, font_name='FreeMono', batch=self.batch))
+        for label, value in zip(self.labels, items):
+            label.text = value
+
+    def update(self, player, population):
         current_rotation = (player.current_rotation + math.pi) % (math.pi*2) - math.pi
 
-        self.current_speed.text, self.current_vector.text, self.current_rotation.text, self.diff_angle.text = (
+        self.text(
             "Speed      : %.03f" % player.speed,
             "Vector     : %.03f" % (player.current_vector * 180 / math.pi),
             "Rotation   : %.03f (%.03f)" % (
@@ -21,4 +28,5 @@ class Panel:
                 player.rotation,
             ),
             "Diff angle : %.03f" % (player.diff_angle),
+            "Population : %s" % repr(population)
         )
