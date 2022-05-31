@@ -193,10 +193,12 @@ class Population:
             print('-'*80, f'Generation: {self.generation}: Survived: {len(self.alive)}')
 
             new_population = []
+            # keep 3 most performant
             for p in self.population[:3]:
                 print('COPY  | %50r |' % p)
                 new_population.append(Brain(target=self.target, player=self.player(), neurons=p.neurons))
 
+            # breed 1-17 and 3-20 most performant
             for s1, s2 in zip(self.population[:17], self.population[3:20]):
                 print('MERGE | %50r | %50r |' % (s1, s2))
 

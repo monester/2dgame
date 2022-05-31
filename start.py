@@ -1,11 +1,10 @@
 import pyglet
+from typing import Optional
 from pyglet.window import key
 
 from game import Player, config, Map, debug_info, Gate
 
-
 game_window = pyglet.window.Window(width=config.WINDOW_WIDTH, height=config.WINDOW_HEIGHT)
-
 
 main_batch = pyglet.graphics.Batch()
 debug_player = debug_info.Panel(main_batch)
@@ -15,11 +14,24 @@ game_window.push_handlers(key_handler)
 from ml import Population
 
 
+class Neat:
+    def __init__(self):
+        self.target = type('', (), dict(x=600, y=20))
+        self.population = Population(
+            target=self.target,
+            player=lambda: Player(rotation=0, x=20, y=20),
+            maps=None,  # self.maps,
+            count=1000,
+        )
+
+    def step(self, dt):
+        self.population.update(dt)
+
+
 class Game:
     def __init__(self, maps, key_handler):
         self.score = 0
-        self.target = type('', (), dict(x=600, y=20))
-        self.player = None
+        self.player: Optional[Player] = None
         self.draw = False
         self.start_position = dict(x=190, y=550, rotation=-30)
         maps = maps or []
@@ -27,14 +39,6 @@ class Game:
         self.maps = [Map(map) for map in maps]
         if len(maps) == 2:
             self.gates = Gate(maps[0], maps[1])
-
-        # neat
-        self.population = Population(
-            target=self.target,
-            player=lambda: Player(rotation=0, x=20, y=20),
-            maps=self.maps,
-            count=1000,
-        )
 
     def read_key(self):
         if self.key_handler[key.Q]:
@@ -60,8 +64,6 @@ class Game:
         if self.gates.check_intersect(self.player):
             self.score += 10
 
-        self.population.update(dt)
-
     def start(self):
         self.player = Player(batch=main_batch, **self.start_position)
         self.score = 0
@@ -72,30 +74,16 @@ class Game:
         self.start()
 
 
-map1_points = [
-    [60, 545], [60, 338], [68, 170], [213, 63], [376, 50], [614, 46], [797, 63], [1019, 136],
-    [1149, 299], [1150, 650], [1050, 756], [722, 756], [580, 603], [426, 626], [286, 632], [60, 545]
-]
-map2_points = [
-    [151, 281], [150, 494], [282, 560], [491, 534], [617, 528], [764, 682], [996, 678],[1072, 625],
-    [1074, 322], [963, 177], [773, 109], [534, 95], [276, 115], [148, 190], [151, 281]
-]
-
-game = Game([map1_points, map2_points], key_handler)
-game.start()
-
-pyglet.clock.schedule_interval(game.loop, 1/60.0)
-
-new_points = []
 @game_window.event
 def on_mouse_press(x, y, button, modifiers):
     # new_points.append([x, y])
     # print(new_points)
     print("NEW TARGET: %s" % x)
-    game.population.target = type('', (), dict(x=x, y=y))
+    # game.population.target = type('', (), dict(x=x, y=y))
 
 
 mouse = type('Mouse', (), {'x': 0, 'y': 0})()
+
 
 @game_window.event
 def on_mouse_motion(x, y, dx, dy):
@@ -113,7 +101,7 @@ def on_draw():
                                  ('c3B', [86, 176, 0] * 4))
 
     # debug info
-    debug_player.update(game.player, game.population)
+    # debug_player.update(game.player, game.population)
     print(mouse.x, mouse.y)
     pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2f', [
         mouse.x - 20, mouse.y - 20,
@@ -134,11 +122,30 @@ def on_draw():
     for map in game.maps:
         map.draw()
 
-    [p.player.draw() for p in game.population.population[0:100]]
+    [p.player.draw() for p in neat.population.population[0:100]]
 
     # draw gates
     game.gates.draw()
 
 
 if __name__ == '__main__':
+    map1_points = [
+        [60, 545], [60, 338], [68, 170], [213, 63], [376, 50], [614, 46], [797, 63], [1019, 136],
+        [1149, 299], [1150, 650], [1050, 756], [722, 756], [580, 603], [426, 626], [286, 632], [60, 545]
+    ]
+    map2_points = [
+        [151, 281], [150, 494], [282, 560], [491, 534], [617, 528], [764, 682], [996, 678], [1072, 625],
+        [1074, 322], [963, 177], [773, 109], [534, 95], [276, 115], [148, 190], [151, 281]
+    ]
+
+    game = Game([map1_points, map2_points], key_handler)
+    game.start()
+
+    neat = Neat()
+
+    pyglet.clock.schedule_interval(game.loop, 1 / 60.0)
+    pyglet.clock.schedule_interval(neat.step, 1 / 60.0)
+
+    new_points = []
+
     pyglet.app.run()
