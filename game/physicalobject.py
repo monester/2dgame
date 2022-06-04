@@ -5,12 +5,12 @@ from . import config
 
 class PhysicalObject(pyglet.sprite.Sprite):
 
-    def __init__(self, max_speed=None, *args, **kwargs):
+    def __init__(self, frame_rate, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.velocity_x = 0.0
         self.velocity_y = 0.0
         self.max_speed = 400
-        self.friction = config.FRICTION
+        self.friction = config.FRICTION / frame_rate
 
     @property
     def points(self):
@@ -33,27 +33,27 @@ class PhysicalObject(pyglet.sprite.Sprite):
             self.velocity_y = 0
             self.y = 0
 
-    def update_position(self, dt):
+    def update_position(self):
         speed = self.speed if self.speed < self.max_speed else self.max_speed
         current_rotation = self.current_rotation
         self.velocity_x = math.cos(current_rotation) * speed
         self.velocity_y = math.sin(current_rotation) * speed
 
-        self.x += self.velocity_x * dt
-        self.y += self.velocity_y * dt
+        self.x += self.velocity_x
+        self.y += self.velocity_y
 
-    def update_friction(self, dt):
+    def update_friction(self):
         speed = abs(self.speed)
         if speed < 2:
             self.velocity_x = 0
             self.velocity_y = 0
         elif speed > 0:
-            self.velocity_x *= 1.0 - self.friction * dt
-            self.velocity_y *= 1.0 - self.friction * dt
+            self.velocity_x *= 1.0 - self.friction
+            self.velocity_y *= 1.0 - self.friction
 
-    def update(self, dt):
-        self.update_position(dt)
-        self.update_friction(dt)
+    def update(self):
+        self.update_position()
+        self.update_friction()
         self.check_borders()
 
     @property

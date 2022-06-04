@@ -128,9 +128,9 @@ class Brain:
     def __getattr__(self, item):
         return self.params[item]
 
-    def update(self, dt):
+    def update(self):
         keys = self()
-        self.player.update(dt, **keys)
+        self.player.update(**keys)
 
     def breed(self, pair, count=10):
         new_species = []
@@ -176,10 +176,10 @@ class Population:
         self._population = value
         self.alive = list(value)
 
-    def update(self, dt):
+    def update(self):
         self.tick += 1
         for i in self.alive[:]:
-            i.update(dt)
+            i.update()
 
             # if any(map.check_colision(i.player)[2] for map in self.maps):
             #     i.player.dead = True

@@ -13,19 +13,21 @@ game_window.push_handlers(key_handler)
 
 from ml import Population
 
+FRAME_RATE = 60.0
+
 
 class Neat:
     def __init__(self):
         self.target = type('', (), dict(x=600, y=20))
         self.population = Population(
             target=self.target,
-            player=lambda: Player(rotation=0, x=20, y=20),
+            player=lambda: Player(rotation=0, frame_rate=FRAME_RATE, x=20, y=20),
             maps=None,  # self.maps,
             count=1000,
         )
 
     def step(self, dt):
-        self.population.update(dt)
+        self.population.update()
 
 
 class Game:
@@ -60,12 +62,12 @@ class Game:
         # if any(map.check_colision(self.player)[2] for map in self.maps):
         #     self.restart()
 
-        self.player.update(dt, **self.read_key())
+        self.player.update(**self.read_key())
         if self.gates.check_intersect(self.player):
             self.score += 10
 
     def start(self):
-        self.player = Player(batch=main_batch, **self.start_position)
+        self.player = Player(batch=main_batch, frame_rate=FRAME_RATE, **self.start_position)
         self.score = 0
         self.gates.last_checked = 0
 

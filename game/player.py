@@ -5,23 +5,23 @@ from .physicalobject import PhysicalObject
 
 
 class Player(PhysicalObject):
-    def __init__(self, rotation, *args, **kwargs):
-        super().__init__(img=player_image, *args, **kwargs)
+    def __init__(self, rotation, frame_rate, *args, **kwargs):
+        super().__init__(img=player_image, frame_rate=frame_rate, *args, **kwargs)
         self.scale = 0.5
         self.start_position = kwargs['x'], kwargs['y'], rotation
         self.rotation = rotation
         self.dead = False
-        self.thrust = config.CAR_THRUST
-        self.max_rotation_speed = config.MAX_CAR_ROTATION_SPEED
+        self.thrust = config.CAR_THRUST / frame_rate
+        self.max_rotation_speed = config.MAX_CAR_ROTATION_SPEED / frame_rate
 
-    def update(self, dt, left=False, right=False, up=False, down=False):
+    def update(self, left=False, right=False, up=False, down=False):
         if self.dead:
             return
-        super().update(dt)
+        super().update()
         if left:
-            self.rotation -= self.rotate_speed * dt
+            self.rotation -= self.rotate_speed
         if right:
-            self.rotation += self.rotate_speed * dt
+            self.rotation += self.rotate_speed
         if up or down:
             if up:
                 # move forward
@@ -36,8 +36,8 @@ class Player(PhysicalObject):
                 else:
                     thrust = -self.thrust * 1.5  # car is slowing
             angle_radians = -math.radians(self.rotation)
-            force_x = math.cos(angle_radians) * thrust * dt
-            force_y = math.sin(angle_radians) * thrust * dt
+            force_x = math.cos(angle_radians) * thrust
+            force_y = math.sin(angle_radians) * thrust
             self.velocity_x += force_x
             self.velocity_y += force_y
 
