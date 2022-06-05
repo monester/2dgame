@@ -1,7 +1,10 @@
 import math
+import math
 from .resources import player_image
 from . import config
 from .physicalobject import PhysicalObject
+
+UP, DOWN, LEFT, RIGHT = 0x1, 0x2, 0x4, 0x8
 
 
 class Player(PhysicalObject):
@@ -11,35 +14,39 @@ class Player(PhysicalObject):
         self.start_position = kwargs['x'], kwargs['y'], rotation
         self.rotation = rotation
         self.dead = False
-        self.thrust = config.CAR_THRUST / frame_rate
-        self.max_rotation_speed = config.MAX_CAR_ROTATION_SPEED / frame_rate
+        self.frame_rate = frame_rate
+        self._thrust = config.CAR_THRUST
+        self._max_rotation_speed = config.MAX_CAR_ROTATION_SPEED
 
-    def update(self, left=False, right=False, up=False, down=False):
+    @property
+    def thrust(self):
+        return self._thrust
+
+    @property
+    def max_rotation_speed(self):
+        return self._max_rotation_speed
+
+    def update(self, keys: int) -> None:
         if self.dead:
             return
         super().update()
+
+        left = keys & LEFT
+        right = keys & RIGHT
+        up = keys & UP
+        down = keys & DOWN
+
         if left:
             self.rotation -= self.rotate_speed
+
         if right:
             self.rotation += self.rotate_speed
-        if up or down:
-            if up:
-                # move forward
-                if self.speed >= 0:
-                    thrust = self.thrust
-                else:
-                    thrust = self.thrust * 1.5  # car is slowing
-            else:
-                # move backward
-                if self.speed <= 0:
-                    thrust = -self.thrust / 3
-                else:
-                    thrust = -self.thrust * 1.5  # car is slowing
-            angle_radians = -math.radians(self.rotation)
-            force_x = math.cos(angle_radians) * thrust
-            force_y = math.sin(angle_radians) * thrust
-            self.velocity_x += force_x
-            self.velocity_y += force_y
+
+        if up:
+            self.speed += self.thrust
+
+        if down:
+            self.speed -= self.thrust
 
         if self.x == 0 or self.x == config.WINDOW_WIDTH or self.y == 0 or self.y == config.WINDOW_HEIGHT:
             # print("DEAD - collide with wall")
@@ -47,10 +54,10 @@ class Player(PhysicalObject):
 
     @property
     def rotate_speed(self):
-        speed = abs(self.speed)
-        if speed > self.max_rotation_speed:
-            speed = self.max_rotation_speed
-        return speed if self.speed > 0 else -speed
+        rotate_speed = abs(self.speed)
+        if rotate_speed > self.max_rotation_speed:
+            rotate_speed = self.max_rotation_speed
+        return rotate_speed / self.frame_rate
 
     def __repr__(self):
         return f"<Player: x: {self.x} y: {self.y} speed: {self.speed}>"

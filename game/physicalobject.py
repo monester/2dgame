@@ -4,13 +4,14 @@ from . import config
 
 
 class PhysicalObject(pyglet.sprite.Sprite):
-
     def __init__(self, frame_rate, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.frame_rate = frame_rate
         self.velocity_x = 0.0
         self.velocity_y = 0.0
-        self.max_speed = 400
-        self.friction = config.FRICTION / frame_rate
+        self._speed = 0.0
+        self.max_speed = config.MAX_CAR_SPEED
+        self.friction = config.FRICTION
 
     @property
     def points(self):
@@ -34,22 +35,17 @@ class PhysicalObject(pyglet.sprite.Sprite):
             self.y = 0
 
     def update_position(self):
-        speed = self.speed if self.speed < self.max_speed else self.max_speed
         current_rotation = self.current_rotation
-        self.velocity_x = math.cos(current_rotation) * speed
-        self.velocity_y = math.sin(current_rotation) * speed
-
-        self.x += self.velocity_x
-        self.y += self.velocity_y
+        velocity_x = math.cos(current_rotation) * self.speed
+        velocity_y = math.sin(current_rotation) * self.speed
+        self.x += velocity_x / self.frame_rate
+        self.y += velocity_y / self.frame_rate
 
     def update_friction(self):
-        speed = abs(self.speed)
-        if speed < 2:
-            self.velocity_x = 0
-            self.velocity_y = 0
-        elif speed > 0:
-            self.velocity_x *= 1.0 - self.friction
-            self.velocity_y *= 1.0 - self.friction
+        self.speed *= 1 - self.friction
+
+        if abs(self.speed) < 4:
+            self.speed = 0
 
     def update(self):
         self.update_position()
@@ -69,11 +65,16 @@ class PhysicalObject(pyglet.sprite.Sprite):
 
     @property
     def speed(self):
-        speed = math.sqrt(self.velocity_x ** 2 + self.velocity_y ** 2)
-        if abs(self.diff_angle) <= 90:
-            return speed
+        return self._speed
+
+    @speed.setter
+    def speed(self, speed):
+        if speed > 0 and speed > self.max_speed:
+            self._speed = self.max_speed
+        elif speed < 0 and speed < -self.max_speed:
+            self._speed = -self.max_speed
         else:
-            return -speed
+            self._speed = speed
 
     @property
     def current_vector(self):

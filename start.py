@@ -3,6 +3,7 @@ from typing import Optional
 from pyglet.window import key
 
 from game import Player, config, Map, debug_info, Gate
+from game.player import LEFT, RIGHT, UP, DOWN
 
 game_window = pyglet.window.Window(width=config.WINDOW_WIDTH, height=config.WINDOW_HEIGHT)
 
@@ -31,29 +32,33 @@ class Neat:
 
 
 class Game:
-    def __init__(self, maps, key_handler):
+    def __init__(self, maps, key_handler, start_position):
         self.score = 0
         self.player: Optional[Player] = None
         self.draw = False
-        self.start_position = dict(x=190, y=550, rotation=-30)
+        # self.start_position = dict(x=190, y=550, rotation=-30)
+        # self.start_position = dict(x=0, y=800, rotation=0)
+        self.start_position = start_position
         maps = maps or []
         self.key_handler = key_handler
         self.maps = [Map(map) for map in maps]
         if len(maps) == 2:
             self.gates = Gate(maps[0], maps[1])
 
-    def read_key(self):
+    def read_key(self) -> int:
         if self.key_handler[key.Q]:
             pyglet.app.event_loop.exit()
         if self.key_handler[key.D]:
             self.draw = not self.draw
 
-        return dict(
-            left=self.key_handler[key.LEFT],
-            right=self.key_handler[key.RIGHT],
-            up=self.key_handler[key.UP],
-            down=self.key_handler[key.DOWN],
-        )
+        keys = sum([
+            RIGHT if self.key_handler[key.RIGHT] else 0,
+            LEFT if self.key_handler[key.LEFT] else 0,
+            DOWN if self.key_handler[key.DOWN] else 0,
+            UP if self.key_handler[key.UP] else 0,
+        ])
+
+        return keys
 
     def loop(self, dt):
         if self.player is None:
@@ -62,7 +67,7 @@ class Game:
         # if any(map.check_colision(self.player)[2] for map in self.maps):
         #     self.restart()
 
-        self.player.update(**self.read_key())
+        self.player.update(self.read_key())
         if self.gates.check_intersect(self.player):
             self.score += 10
 
@@ -79,7 +84,6 @@ class Game:
 @game_window.event
 def on_mouse_press(x, y, button, modifiers):
     # new_points.append([x, y])
-    # print(new_points)
     print("NEW TARGET: %s" % x)
     # game.population.target = type('', (), dict(x=x, y=y))
 
@@ -90,7 +94,6 @@ mouse = type('Mouse', (), {'x': 0, 'y': 0})()
 @game_window.event
 def on_mouse_motion(x, y, dx, dy):
     mouse.x, mouse.y = x, y
-    # print x, y, dx, y, dx, dy, x, dy
 
 
 @game_window.event
@@ -103,8 +106,7 @@ def on_draw():
                                  ('c3B', [86, 176, 0] * 4))
 
     # debug info
-    # debug_player.update(game.player, game.population)
-    print(mouse.x, mouse.y)
+    debug_player.update(game)
     pyglet.graphics.draw(4, pyglet.gl.GL_QUADS, ('v2f', [
         mouse.x - 20, mouse.y - 20,
         mouse.x + 20, mouse.y - 20,
@@ -140,13 +142,14 @@ if __name__ == '__main__':
         [1074, 322], [963, 177], [773, 109], [534, 95], [276, 115], [148, 190], [151, 281]
     ]
 
-    game = Game([map1_points, map2_points], key_handler)
+    game = Game([map1_points, map2_points], key_handler, dict(x=190, y=550, rotation=-30))
+    # game = Game([map1_points, map2_points], key_handler, dict(x=0, y=800, rotation=0))
     game.start()
 
     neat = Neat()
 
     pyglet.clock.schedule_interval(game.loop, 1 / 60.0)
-    pyglet.clock.schedule_interval(neat.step, 1 / 60.0)
+    # pyglet.clock.schedule_interval(neat.step, 1 / 60.0)
 
     new_points = []
 

@@ -17,7 +17,8 @@ class Panel:
         for label, value in zip(self.labels, items):
             label.text = value
 
-    def update(self, player, population):
+    def update(self, game):
+        player = game.player
         current_rotation = (player.current_rotation + math.pi) % (math.pi*2) - math.pi
 
         self.text(
@@ -28,5 +29,5 @@ class Panel:
                 player.rotation,
             ),
             "Diff angle : %.03f" % (player.diff_angle),
-            "Population : %s" % repr(population)
+            # "Population : %s" % repr(population)
         )
