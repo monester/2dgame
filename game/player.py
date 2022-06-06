@@ -1,5 +1,3 @@
-import math
-import math
 from .resources import player_image
 from . import config
 from .physicalobject import PhysicalObject
@@ -37,16 +35,16 @@ class Player(PhysicalObject):
         down = keys & DOWN
 
         if left:
-            self.rotation -= self.rotate_speed
+            self.rotation -= self.rotate_speed / self.frame_rate
 
         if right:
-            self.rotation += self.rotate_speed
+            self.rotation += self.rotate_speed / self.frame_rate
 
         if up:
-            self.speed += self.thrust
+            self.speed += self.thrust / self.frame_rate
 
         if down:
-            self.speed -= self.thrust
+            self.speed -= self.thrust / self.frame_rate
 
         if self.x == 0 or self.x == config.WINDOW_WIDTH or self.y == 0 or self.y == config.WINDOW_HEIGHT:
             # print("DEAD - collide with wall")
@@ -57,7 +55,7 @@ class Player(PhysicalObject):
         rotate_speed = abs(self.speed)
         if rotate_speed > self.max_rotation_speed:
             rotate_speed = self.max_rotation_speed
-        return rotate_speed / self.frame_rate
+        return rotate_speed
 
     def __repr__(self):
         return f"<Player: x: {self.x} y: {self.y} speed: {self.speed}>"

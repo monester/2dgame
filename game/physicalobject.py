@@ -10,6 +10,7 @@ class PhysicalObject(pyglet.sprite.Sprite):
         self.velocity_x = 0.0
         self.velocity_y = 0.0
         self._speed = 0.0
+        self._acceleration = 0.0
         self.max_speed = config.MAX_CAR_SPEED
         self.friction = config.FRICTION
 
@@ -34,6 +35,10 @@ class PhysicalObject(pyglet.sprite.Sprite):
             self.velocity_y = 0
             self.y = 0
 
+    @property
+    def acceleration(self):
+        return self._acceleration
+
     def update_position(self):
         current_rotation = self.current_rotation
         velocity_x = math.cos(current_rotation) * self.speed
@@ -42,9 +47,9 @@ class PhysicalObject(pyglet.sprite.Sprite):
         self.y += velocity_y / self.frame_rate
 
     def update_friction(self):
-        self.speed *= 1 - self.friction
+        self.speed *= 1 - self.friction / self.frame_rate
 
-        if abs(self.speed) < 4:
+        if abs(self.speed) < 4 / self.frame_rate:
             self.speed = 0
 
     def update(self):
@@ -65,6 +70,7 @@ class PhysicalObject(pyglet.sprite.Sprite):
 
     @property
     def speed(self):
+        self._speed += self.acceleration / self.frame_rate
         return self._speed
 
     @speed.setter
@@ -83,3 +89,6 @@ class PhysicalObject(pyglet.sprite.Sprite):
     @property
     def current_rotation(self):
         return -math.radians(self.rotation)
+
+
+# m/s = m/s + m/s*s / s
