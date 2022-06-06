@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "2dgame"
+version = "0.1.0"
+description = ""
+authors = ["Alexander Charykov <monester@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pyglet = "~1.5"
+numpy = "^1.22.4"
+torch = "^1.11.0"
+torchvision = "^0.12.0"
+torchaudio = "^0.11.0"
+gym = "^0.24.0"
+nes-py = "^8.1.8"
+gym-super-mario-bros = "^7.3.2"
+
+[tool.poetry.dev-dependencies]
+ipython = "<8.2.0"
+notebook = "^6.4.11"
+matplotlib = "^3.5.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
