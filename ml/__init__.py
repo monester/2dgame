@@ -74,6 +74,8 @@ def sigmoid(x):
 
 
 from game.player import Player
+
+
 # p = Player(0, x=1, y=1)
 
 
@@ -111,26 +113,26 @@ class Brain:
         self.player = player
         self.target = target
 
-    def __call__(self):
+    def __call__(self) -> int:
         dist = (self.target.x - self.player.x) / 1200  # max width
         car_angle = math.atan2(self.player.velocity_y, self.player.velocity_x)
         target_angle = math.atan2(self.target.y - self.player.y, self.target.x - self.player.x)
         # print(car_angle - target_angle, car_angle, target_angle)
 
-        speed = self.player.speed / 450      # max speed
-        actions = {}
-        for index, action in enumerate(['up', 'down', 'left', 'right']):
-            actions[action] = self.neurons[index](dist, speed, car_angle - target_angle) > 0.7
+        speed = self.player.speed / 450  # max speed
+        actions = 0
+        for index, action in enumerate([0x1, 0x2, 0x4, 0x8]):
+            if self.neurons[index](dist, speed, car_angle - target_angle) > 0.7:
+                actions += action
 
-        resp = dict(**actions)
-        return resp
+        return actions
 
     def __getattr__(self, item):
         return self.params[item]
 
     def update(self):
         keys = self()
-        self.player.update(**keys)
+        self.player.update(keys)
 
     def breed(self, pair, count=10):
         new_species = []
@@ -151,9 +153,11 @@ class Brain:
         return distance + abs(self.player.speed * 2)
 
     def __repr__(self):
-        brain = f"fitness={self.fitness:.2f}" # ' w1={self.w1:.2f} w2={self.w2:.2f} b={self.b:.2f}"
-        player = f"x: {self.player.x} y: {self.player.y} speed: {self.player.speed}"
-        return f"{brain:20s} {player:40s}"
+        return (
+            f"fitness: {self.fitness:<7.2f} "  
+            # f"w1={self.w1:9.4f} w2={self.w2:9.4f} b={self.b:9.4f} "
+            f"x: {self.player.x:<7.2f} y: {self.player.y:<7.2f} speed: {self.player.speed:<7.2f}"
+        )
 
 
 class Population:
@@ -190,7 +194,7 @@ class Population:
         if len(self.alive) == 0 or self.tick % 100 == 0:
             self.population.sort(key=lambda x: x.fitness)
             self.generation += 1
-            print('-'*80, f'Generation: {self.generation}: Survived: {len(self.alive)}')
+            print('-' * 80, f'Generation: {self.generation}: Survived: {len(self.alive)}')
 
             new_population = []
             # keep 3 most performant

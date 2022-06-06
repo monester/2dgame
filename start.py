@@ -15,8 +15,7 @@ game_window.push_handlers(key_handler)
 from ml import Population
 
 # pyglet schedule_interval doesn't support more than 60Hz
-FRAME_RATE = 60.0
-assert FRAME_RATE <= 60.0
+FRAME_RATE = 30.0
 
 
 class Neat:
@@ -151,21 +150,8 @@ if __name__ == '__main__':
 
     neat = Neat()
 
-    # def benchmark(dt):
-    #     global count, last_sec
-    #     dt = datetime.datetime.now()
-    #     if last_sec != dt.second:
-    #         print(f"count={count}")
-    #         count = 0
-    #         last_sec = dt.second
-    #     count += 1
-    #     pyglet.clock.schedule_interval(benchmark, 1/120)
-    #
-    # pyglet.clock
-    # pyglet.clock.schedule_interval(benchmark,1/120)
-
     pyglet.clock.schedule_interval(game.loop, 1 / FRAME_RATE)
-    # pyglet.clock.schedule_interval(neat.step, 1 / 60.0)
+    pyglet.clock.schedule_interval(neat.step, 1 / FRAME_RATE)
 
     new_points = []
 
