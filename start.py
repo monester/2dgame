@@ -1,5 +1,3 @@
-import datetime
-
 import pyglet
 from typing import Optional
 from pyglet.window import key
